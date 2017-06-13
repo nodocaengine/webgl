@@ -16,8 +16,13 @@ onload = () => {
   let f_shader = create_shader('fs');
   let prg = create_program(v_shader, f_shader);
 
-  let attLocation = gl.getAttribLocation(prg, 'position');
-  let attStride = 3;
+  let attLocation = new Array(2);
+  attLocation[0] = gl.getAttribLocation(prg, 'position');
+  attLocation[1] = gl.getAttribLocation(prg, 'color');
+
+  let attStride = new Array(2);
+  attStride[0] = 3;
+  attStride[1] = 4;
 
   let vertex_position = [
     0.0, 1.0, 0.0,
@@ -25,12 +30,22 @@ onload = () => {
     -1.0, 0.0, 0.0
   ];
 
-  let vbo = create_vbo(vertex_position);
+  let vertex_color = [
+    1.0, 0.0, 0.0, 1.0,
+    0.0, 1.0, 0.0, 1.0,
+    0.0, 0.0, 1.0, 1.0
+  ];
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-  gl.enableVertexAttribArray(attLocation);
-  gl.vertexAttribPointer(attLocation, attStride, gl.FLOAT, false, 0, 0);
+  let position_vbo = create_vbo(vertex_position);
+  let color_vbo= create_vbo(vertex_color);
 
+  gl.bindBuffer(gl.ARRAY_BUFFER, position_vbo);
+  gl.enableVertexAttribArray(attLocation[0]);
+  gl.vertexAttribPointer(attLocation[0], attStride[0], gl.FLOAT, false, 0, 0);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, color_vbo);
+  gl.enableVertexAttribArray(attLocation[1]);
+  gl.vertexAttribPointer(attLocation[1], attStride[1], gl.FLOAT, false, 0, 0);
 
   let m = new matIV();
   let mMatrix = m.identity(m.create());
