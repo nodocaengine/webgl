@@ -24,46 +24,52 @@ onload = () => {
   attStride[0] = 3;
   attStride[1] = 4;
 
-  let vertex_position = [
+  let position = [
     0.0, 1.0, 0.0,
     1.0, 0.0, 0.0,
     -1.0, 0.0, 0.0
   ];
 
-  let vertex_color = [
+  let color = [
     1.0, 0.0, 0.0, 1.0,
     0.0, 1.0, 0.0, 1.0,
     0.0, 0.0, 1.0, 1.0
   ];
 
-  let position_vbo = create_vbo(vertex_position);
-  let color_vbo= create_vbo(vertex_color);
+  let pos_vbo = create_vbo(position);
+  let col_vbo= create_vbo(color);
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, position_vbo);
-  gl.enableVertexAttribArray(attLocation[0]);
-  gl.vertexAttribPointer(attLocation[0], attStride[0], gl.FLOAT, false, 0, 0);
+  set_attribute([pos_vbo, col_vbo], attLocation, attStride);
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, color_vbo);
-  gl.enableVertexAttribArray(attLocation[1]);
-  gl.vertexAttribPointer(attLocation[1], attStride[1], gl.FLOAT, false, 0, 0);
+  let uniLocation = gl.getUniformLocation(prg, 'mvpMatrix');
 
   let m = new matIV();
   let mMatrix = m.identity(m.create());
   let vMatrix = m.identity(m.create());
   let pMatrix = m.identity(m.create());
+  let tmpMatrix = m.identity(m.create());
   let mvpMatrix = m.identity(m.create());
 
-  m.lookAt([0.0, 1.0, 3.0], [0, 0, 0], [0, 1, 0], vMatrix);
+  m.lookAt([0.0, 0.0, 3.0], [0, 0, 0], [0, 1, 0], vMatrix);
   m.perspective(90, c.width / c.height, 0.1, 100, pMatrix);
 
-  m.multiply(pMatrix, vMatrix, mvpMatrix);
-  m.multiply(mvpMatrix, mMatrix, mvpMatrix);
+  m.multiply(pMatrix, vMatrix, tmpMatrix);
 
-  let uniLocation = gl.getUniformLocation(prg, 'mvpMatrix');
+  m.translate(mMatrix, [1.5, 0.0, 0.0], mMatrix);
+
+  m.multiply(tmpMatrix, mMatrix, mvpMatrix);
 
   gl.uniformMatrix4fv(uniLocation, false, mvpMatrix);
-
   gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+  m.identity(mMatrix);
+  m.translate(mMatrix, [-1.5, 0.0, 0.0], mMatrix);
+
+  m.multiply(tmpMatrix, mMatrix, mvpMatrix);
+
+  gl.uniformMatrix4fv(uniLocation, false, mvpMatrix);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+
   gl.flush();
 
   function create_shader(id) {
@@ -119,6 +125,14 @@ onload = () => {
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
   
     return vbo;
+  }
+
+  function set_attribute(vbo, attL, attS) {
+    for(var i in vbo) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo[i]);
+      gl.enableVertexAttribArray(attL[i]);
+      gl.vertexAttribPointer(attL[i], attS[i], gl.FLOAT, false, 0, 0);
+    }
   }
 };
 
