@@ -7,10 +7,6 @@ onload = () => {
   c.height = 300;
   
   let gl = c.getContext('webgl') || c.getContext('experimental-webgl');
-  
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
-  gl.clearDepth(1.0);
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUDDER_BIT);
 
   let v_shader = create_shader('vs');
   let f_shader = create_shader('fs');
@@ -50,27 +46,50 @@ onload = () => {
   let tmpMatrix = m.identity(m.create());
   let mvpMatrix = m.identity(m.create());
 
-  m.lookAt([0.0, 0.0, 3.0], [0, 0, 0], [0, 1, 0], vMatrix);
-  m.perspective(90, c.width / c.height, 0.1, 100, pMatrix);
-
+  m.lookAt([0.0, 0.0, 5.0], [0, 0, 0], [0, 1, 0], vMatrix);
+  m.perspective(45, c.width / c.height, 0.1, 100, pMatrix);
   m.multiply(pMatrix, vMatrix, tmpMatrix);
 
-  m.translate(mMatrix, [1.5, 0.0, 0.0], mMatrix);
+  let count = 0;
 
-  m.multiply(tmpMatrix, mMatrix, mvpMatrix);
+  (function() {
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clearDepth(1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUDDER_BIT);
 
-  gl.uniformMatrix4fv(uniLocation, false, mvpMatrix);
-  gl.drawArrays(gl.TRIANGLES, 0, 3);
+    count++;
 
-  m.identity(mMatrix);
-  m.translate(mMatrix, [-1.5, 0.0, 0.0], mMatrix);
+    let rad = (count % 360) * Math.PI / 180;
+    let x = Math.cos(rad);
+    let y = Math.sin(rad);
 
-  m.multiply(tmpMatrix, mMatrix, mvpMatrix);
+    m.identity(mMatrix);
+    m.translate(mMatrix, [x, y + 1.0, 0.0], mMatrix);
+    m.multiply(tmpMatrix, mMatrix, mvpMatrix);
+    gl.uniformMatrix4fv(uniLocation, false, mvpMatrix);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
 
-  gl.uniformMatrix4fv(uniLocation, false, mvpMatrix);
-  gl.drawArrays(gl.TRIANGLES, 0, 3);
+    m.identity(mMatrix);
+    m.translate(mMatrix, [1.0, -1.0, 0.0], mMatrix);
+    m.rotate(mMatrix, rad, [0, 1, 0], mMatrix);
 
-  gl.flush();
+    m.multiply(tmpMatrix, mMatrix, mvpMatrix);
+    gl.uniformMatrix4fv(uniLocation, false, mvpMatrix);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    let s = Math.sin(rad) + 1.0;
+    m.identity(mMatrix);
+    m.translate(mMatrix, [-1.0, -1.0, 0.0], mMatrix);
+    m.scale(mMatrix, [s, s, 0.0], mMatrix);
+
+    m.multiply(tmpMatrix, mMatrix, mvpMatrix);
+    gl.uniformMatrix4fv(uniLocation, false, mvpMatrix);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    gl.flush();
+
+    setTimeout(arguments.callee, 1000 / 30);
+  })();
 
   function create_shader(id) {
     let shader;
